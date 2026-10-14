@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0f0f13" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="DompetKu" />
+  <title>DompetKu</title>
+  <link rel="manifest" href="manifest.json" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=Syne:wght@700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg: #0f0f13;
+      --surface: #18181f;
+      --border: #2a2a35;
+      --border2: #1e1e28;
+      --text: #e8e8f0;
+      --muted: #888;
+      --dim: #555;
+      --accent: #7c6ef7;
+      --accent2: #a78bfa;
+      --green: #4ade80;
+      --green-bg: #1a3a28;
+      --green-border: #22543a;
+      --red: #f87171;
+      --red-bg: #3a1a1a;
+      --red-border: #5a2222;
+      --input-bg: #111118;
+    }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', 'Segoe UI', sans-serif;
+      min-height: 100vh;
+      padding-bottom: 80px;
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px));
+    }
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+
+    /* Header */
+    .header {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border2);
+      padding: 18px 20px 16px;
+      padding-top: calc(18px + env(safe-area-inset-top, 0px));
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .header-logo { color: var(--accent); display: flex; }
+    .header-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 20px; letter-spacing: -0.5px; }
+    .header-spacer { flex: 1; }
+
+    /* Main */
+    .main { max-width: 600px; margin: 0 auto; padding: 20px 16px 0; }
+
+    /* Cards */
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; }
+    .card-saldo {
+      padding: 22px;
+      margin-bottom: 14px;
+      background: linear-gradient(135deg, #1a1728 0%, #18181f 100%);
+      border-color: #302a55;
+    }
+    .saldo-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 6px; }
+    .saldo-amount { font-family: 'Syne', sans-serif; font-size: 34px; font-weight: 800; letter-spacing: -1px; margin-bottom: 4px; }
+    .saldo-sub { font-size: 12px; color: var(--dim); }
+
+    .summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 22px; }
+    .summary-card { padding: 15px 16px; }
+    .summary-icon { width: 30px; height: 30px; border-radius: 8px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; }
+    .summary-label { font-size: 11px; color: var(--muted); font-weight: 600; margin-bottom: 5px; }
+    .summary-val { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 17px; }
+
+    /* Filter */
+    .filter-row { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .chip {
+      border: none; border-radius: 8px; padding: 7px 14px;
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.15s;
+      font-family: inherit;
+    }
+    .chip-all { background: var(--border2); color: var(--muted); }
+    .chip-all.active { background: var(--accent); color: #fff; }
+    .chip-mas { background: var(--border2); color: var(--muted); }
+    .chip-mas.active { background: var(--green-bg); color: var(--green); border: 1px solid var(--green-border); }
+    .chip-kel { background: var(--border2); color: var(--muted); }
+    .chip-kel.active { background: var(--red-bg); color: var(--red); border: 1px solid var(--red-border); }
+    .filter-count { margin-left: auto; font-size: 12px; color: var(--dim); }
+
+    /* Tx list */
+    .tx-list { overflow: hidden; }
+    .tx-empty { padding: 40px; text-align: center; color: var(--dim); }
+    .tx-empty-icon { font-size: 30px; margin-bottom: 8px; }
+    .tx-row {
+      display: flex; align-items: center; padding: 13px 16px; gap: 12px;
+      border-bottom: 1px solid var(--border2); cursor: default;
+      transition: background 0.1s;
+    }
+    .tx-row:last-child { border-bottom: none; }
+    .tx-row:hover { background: #1c1c26; }
+    .tx-icon { width: 36px; height: 36px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    .tx-info { flex: 1; min-width: 0; }
+    .tx-desc { font-weight: 600; font-size: 14px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .tx-meta { font-size: 12px; color: var(--dim); margin-top: 3px; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .tx-tag { background: var(--border2); border-radius: 5px; padding: 2px 7px; }
+    .tx-amount { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 15px; flex-shrink: 0; text-align: right; }
+    .del-btn {
+      background: none; border: none; cursor: pointer; color: #444;
+      padding: 6px; border-radius: 6px; transition: all 0.15s;
+      display: flex; align-items: center; flex-shrink: 0;
+    }
+    .del-btn:hover { color: var(--red); background: var(--red-bg); }
+
+    /* Buttons */
+    .btn-primary {
+      background: var(--accent); color: #fff; border: none; border-radius: 10px;
+      padding: 11px 20px; font-size: 14px; font-weight: 600; cursor: pointer;
+      transition: background 0.2s, transform 0.1s; font-family: inherit;
+    }
+    .btn-primary:hover { background: #6b5ce6; transform: translateY(-1px); }
+    .btn-ghost {
+      background: transparent; color: var(--muted); border: 1px solid var(--border);
+      border-radius: 10px; padding: 11px 20px; font-size: 14px; font-weight: 500;
+      cursor: pointer; transition: all 0.15s; font-family: inherit;
+    }
+    .btn-ghost:hover { border-color: #555; color: #ccc; }
+
+    /* Modal */
+    .overlay {
+      position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      z-index: 50; display: flex; align-items: flex-end; justify-content: center;
+      animation: fadeIn 0.15s;
+      padding-bottom: env(safe-area-inset-bottom, 0px);
+    }
+    @keyframes fadeIn { from { opacity:0 } to { opacity:1 } }
+    .modal {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: 24px 24px 0 0; width: 100%; max-width: 600px;
+      padding: 24px 20px 28px; animation: slideUp 0.25s cubic-bezier(.16,1,.3,1);
+      max-height: 90vh; overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(60px); opacity:0 } to { transform:translateY(0); opacity:1 } }
+    .modal-title { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 19px; margin-bottom: 20px; }
+    .modal-drag { width: 40px; height: 4px; background: #333; border-radius: 2px; margin: 0 auto 20px; }
+
+    /* Form */
+    .tipe-row { display: flex; gap: 8px; margin-bottom: 16px; }
+    .tipe-btn {
+      flex: 1; padding: 10px; border-radius: 9px; border: 1.5px solid var(--border);
+      font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+      background: var(--input-bg); color: #666; font-family: inherit;
+    }
+    .tipe-btn.sel-mas { background: var(--green-bg); color: var(--green); border-color: var(--green-border); }
+    .tipe-btn.sel-kel { background: var(--red-bg); color: var(--red); border-color: var(--red-border); }
+    .field { margin-bottom: 12px; }
+    .field-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+    .field label { display: block; font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; margin-bottom: 6px; text-transform: uppercase; }
+    .field-input {
+      width: 100%; background: var(--input-bg); border: 1.5px solid #2a2a38;
+      border-radius: 10px; padding: 11px 14px; color: var(--text);
+      font-size: 14px; font-family: inherit; transition: border-color 0.2s; outline: none;
+    }
+    .field-input:focus { border-color: var(--accent); }
+    .error-box {
+      background: var(--red-bg); color: var(--red); border-radius: 8px;
+      padding: 10px 14px; font-size: 13px; margin-top: 10px; margin-bottom: 4px;
+    }
+    .btn-row { display: flex; gap: 10px; margin-top: 18px; }
+    .btn-row .btn-ghost { flex: 1; }
+    .btn-row .btn-primary { flex: 2; }
+  </style>
+</head>
+<body>
+
+<div id="app">
+  <!-- Header -->
+  <div class="header">
+    <div class="header-logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="3"/><path d="M1 10h22"/></svg>
+    </div>
+    <span class="header-title">DompetKu</span>
+    <span class="header-spacer"></span>
+    <button class="btn-primary" onclick="bukaForm()" style="padding:9px 16px;font-size:13px">+ Tambah</button>
+  </div>
+
+  <div class="main">
+    <!-- Saldo -->
+    <div class="card card-saldo">
+      <div class="saldo-label">Total Saldo</div>
+      <div class="saldo-amount" id="saldo-display">Rp 0</div>
+      <div class="saldo-sub" id="saldo-sub">Diperbarui hari ini</div>
+    </div>
+
+    <!-- Summary -->
+    <div class="summary-grid">
+      <div class="card summary-card">
+        <div class="summary-icon" style="background:var(--green-bg);color:var(--green)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>
+        </div>
+        <div class="summary-label">PEMASUKAN</div>
+        <div class="summary-val" style="color:var(--green)" id="total-mas">Rp 0</div>
+      </div>
+      <div class="card summary-card">
+        <div class="summary-icon" style="background:var(--red-bg);color:var(--red)">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>
+        </div>
+        <div class="summary-label">PENGELUARAN</div>
+        <div class="summary-val" style="color:var(--red)" id="total-kel">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- Filter -->
+    <div class="filter-row">
+      <button class="chip chip-all active" onclick="setFilter('semua',this)">Semua</button>
+      <button class="chip chip-mas" onclick="setFilter('pemasukan',this)">Pemasukan</button>
+      <button class="chip chip-kel" onclick="setFilter('pengeluaran',this)">Pengeluaran</button>
+      <span class="filter-count" id="filter-count">0 transaksi</span>
+    </div>
+
+    <!-- List -->
+    <div class="card tx-list" id="tx-list"></div>
+  </div>
+</div>
+
+<!-- Modal -->
+<div class="overlay" id="overlay" style="display:none" onclick="tutupFormOverlay(event)">
+  <div class="modal">
+    <div class="modal-drag"></div>
+    <div class="modal-title">Transaksi Baru</div>
+    <div class="tipe-row">
+      <button class="tipe-btn sel-mas" id="btn-mas" onclick="setTipe('pemasukan')">↑ Pemasukan</button>
+      <button class="tipe-btn" id="btn-kel" onclick="setTipe('pengeluaran')">↓ Pengeluaran</button>
+    </div>
+    <div class="field">
+      <label>Deskripsi</label>
+      <input class="field-input" id="f-desc" placeholder="Contoh: Gaji Bulan Mei" />
+    </div>
+    <div class="field">
+      <label>Jumlah (Rp)</label>
+      <input class="field-input" id="f-jml" type="number" placeholder="0" min="1" />
+    </div>
+    <div class="field-2">
+      <div class="field" style="margin:0">
+        <label>Kategori</label>
+        <select class="field-input" id="f-kat"></select>
+      </div>
+      <div class="field" style="margin:0">
+        <label>Tanggal</label>
+        <input class="field-input" id="f-tgl" type="date" />
+      </div>
+    </div>
+    <div id="f-error" class="error-box" style="display:none"></div>
+    <div class="btn-row">
+      <button class="btn-ghost" onclick="tutupForm()">Batal</button>
+      <button class="btn-primary" onclick="simpan()">Simpan Transaksi</button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const KAT_MAS = ["Gaji","Freelance","Bisnis","Investasi","Hadiah","Lainnya"];
+  const KAT_KEL = ["Makanan","Transport","Belanja","Tagihan","Hiburan","Kesehatan","Pendidikan","Lainnya"];
+
+  let transaksi = JSON.parse(localStorage.getItem('dompetku_data') || 'null') || [
+    { id:1, tipe:"pemasukan",  deskripsi:"Gaji Bulan Ini",  jumlah:5000000, kategori:"Gaji",      tanggal:"2026-05-01" },
+    { id:2, tipe:"pengeluaran",deskripsi:"Makan Siang",     jumlah:45000,   kategori:"Makanan",   tanggal:"2026-05-03" },
+    { id:3, tipe:"pengeluaran",deskripsi:"Grab ke Kantor",  jumlah:32000,   kategori:"Transport", tanggal:"2026-05-05" },
+  ];
+  let filterTipe = "semua";
+  let formTipe = "pemasukan";
+
+  function simpanLS() { localStorage.setItem('dompetku_data', JSON.stringify(transaksi)); }
+
+  function formatRp(n) { return "Rp " + Math.abs(n).toLocaleString("id-ID"); }
+  function formatTgl(s) {
+    if (!s) return "";
+    return new Date(s).toLocaleDateString("id-ID",{day:"numeric",month:"long",year:"numeric"});
+  }
+  function today() { return new Date().toISOString().split("T")[0]; }
+
+  function render() {
+    const mas = transaksi.filter(t=>t.tipe==="pemasukan").reduce((s,t)=>s+t.jumlah,0);
+    const kel = transaksi.filter(t=>t.tipe==="pengeluaran").reduce((s,t)=>s+t.jumlah,0);
+    const saldo = mas - kel;
+
+    document.getElementById("total-mas").textContent = formatRp(mas);
+    document.getElementById("total-kel").textContent = formatRp(kel);
+    const sd = document.getElementById("saldo-display");
+    sd.textContent = (saldo < 0 ? "-" : "") + formatRp(saldo);
+    sd.style.color = saldo >= 0 ? "var(--accent2)" : "var(--red)";
+
+    const filtered = transaksi
+      .filter(t => filterTipe==="semua" || t.tipe===filterTipe)
+      .sort((a,b) => new Date(b.tanggal)-new Date(a.tanggal));
+
+    document.getElementById("filter-count").textContent = filtered.length + " transaksi";
+
+    const list = document.getElementById("tx-list");
+    if (filtered.length === 0) {
+      list.innerHTML = '<div class="tx-empty"><div class="tx-empty-icon">💸</div><div>Belum ada transaksi</div></div>';
+      return;
+    }
+    list.innerHTML = filtered.map(t => {
+      const isMas = t.tipe==="pemasukan";
+      const arrowUp = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 19V5M5 12l7-7 7 7"/></svg>`;
+      const arrowDn = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12l7 7 7-7"/></svg>`;
+      const trash = `<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4h6v2"/></svg>`;
+      return `<div class="tx-row">
+        <div class="tx-icon" style="background:${isMas?"var(--green-bg)":"var(--red-bg)"};color:${isMas?"var(--green)":"var(--red)"}">
+          ${isMas ? arrowUp : arrowDn}
+        </div>
+        <div class="tx-info">
+          <div class="tx-desc">${t.deskripsi}</div>
+          <div class="tx-meta"><span class="tx-tag">${t.kategori}</span>${formatTgl(t.tanggal)}</div>
+        </div>
+        <div class="tx-amount" style="color:${isMas?"var(--green)":"var(--red)"}">
+          ${isMas?"+":"-"}${formatRp(t.jumlah)}
+        </div>
+        <button class="del-btn" onclick="hapus(${t.id})">${trash}</button>
+      </div>`;
+    }).join("");
+  }
+
+  function setFilter(tipe, el) {
+    filterTipe = tipe;
+    document.querySelectorAll(".chip").forEach(c => c.classList.remove("active"));
+    el.classList.add("active");
+    render();
+  }
+
+  function hapus(id) {
+    transaksi = transaksi.filter(t=>t.id!==id);
+    simpanLS(); render();
+  }
+
+  function bukaForm() {
+    formTipe = "pemasukan";
+    document.getElementById("btn-mas").className = "tipe-btn sel-mas";
+    document.getElementById("btn-kel").className = "tipe-btn";
+    updateKategori();
+    document.getElementById("f-desc").value = "";
+    document.getElementById("f-jml").value = "";
+    document.getElementById("f-tgl").value = today();
+    document.getElementById("f-error").style.display = "none";
+    document.getElementById("overlay").style.display = "flex";
+    setTimeout(()=>document.getElementById("f-desc").focus(),300);
+  }
+
+  function tutupForm() { document.getElementById("overlay").style.display = "none"; }
+  function tutupFormOverlay(e) { if(e.target===document.getElementById("overlay")) tutupForm(); }
+
+  function setTipe(tipe) {
+    formTipe = tipe;
+    document.getElementById("btn-mas").className = "tipe-btn" + (tipe==="pemasukan"?" sel-mas":"");
+    document.getElementById("btn-kel").className = "tipe-btn" + (tipe==="pengeluaran"?" sel-kel":"");
+    updateKategori();
+  }
+
+  function updateKategori() {
+    const sel = document.getElementById("f-kat");
+    const cats = formTipe==="pemasukan" ? KAT_MAS : KAT_KEL;
+    sel.innerHTML = cats.map(c=>`<option>${c}</option>`).join("");
+  }
+
+  function simpan() {
+    const desc = document.getElementById("f-desc").value.trim();
+    const jml = Number(document.getElementById("f-jml").value);
+    const kat = document.getElementById("f-kat").value;
+    const tgl = document.getElementById("f-tgl").value;
+    const err = document.getElementById("f-error");
+
+    if (!desc) { err.textContent="Deskripsi wajib diisi."; err.style.display="block"; return; }
+    if (!jml || jml <= 0) { err.textContent="Jumlah harus angka positif."; err.style.display="block"; return; }
+    if (!tgl) { err.textContent="Tanggal wajib diisi."; err.style.display="block"; return; }
+
+    transaksi.push({ id: Date.now(), tipe: formTipe, deskripsi: desc, jumlah: jml, kategori: kat, tanggal: tgl });
+    simpanLS(); render(); tutupForm();
+  }
+
+  render();
+</script>
+</body>
+</html>
